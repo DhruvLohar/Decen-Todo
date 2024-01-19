@@ -27,14 +27,37 @@ const MetaMaskIcon = () => {
 export default function Home() {
 
 	const [walletAddress, setWalletAddress] = useState(null)
+	const [correctNetwork, setCorrectNetwork] = useState(false)
 
 	const [todos, setTodos] = useState([{
 		title: "Fix Pitstop Team Registration",
 		content: "Change the category generation and fix backend 500 error"
 	}])
 
-	const requestWallet = () => {
-		alert("Connect to metamask")
+	const requestWallet = async () => {
+		try {
+			const { ethereum } = window;
+			if (!ethereum) {
+				alert("Metamask not detected")
+				return
+			}
+
+			const chainId = await ethereum.request({method: 'eth_chainId'})
+			const testNetworkId = '0x4'
+			if (chainId !== testNetworkId) {
+				alert("You are not connected to local network")
+				setCorrectNetwork(false)
+				return
+			} else {
+				setCorrectNetwork(true)
+			}
+
+			const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
+			setWalletAddress(accounts[0])
+
+		} catch (error) {
+			console.log(error)
+		}
 	}
 
 	const createTodo = () => {
@@ -50,9 +73,16 @@ export default function Home() {
 					<Add size={24} color="#ffffff" /> <span className="ml-2">Create New Todo</span>
 				</button>
 				<hr className="rotate-90 bg-white w-[1.8rem] opacity-30" />
+				
 				<button className="flex items-center" onClick={requestWallet}>
 					<MetaMaskIcon />
-					<span className="ml-2">Connect my wallet</span>
+					{walletAddress ? (
+						<span className="ml-2">Wallet Connected.</span>
+					) : !correctNetwork ? (
+						<span className="ml-2">Please Connect to Local Network</span>
+					) : (
+						<span className="ml-2">Connect my wallet</span>
+					)}
 				</button>
 			</div>
 			<hr className="mb-10 bg-gray-100 opacity-20 w-full mb-10" />
