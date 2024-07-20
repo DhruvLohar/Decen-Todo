@@ -1,40 +1,59 @@
 "use client";
 
-import CreateTodo from "@/components/CreateTodo";
-import TodoCard from "@/components/TodoCard";
+import { useEffect, useState } from "react";
 import { Add } from "iconsax-react";
-import { useState } from "react";
+
+import { ethers } from "ethers";
+import TodoManagerContract from "@/artifacts/contracts/TodoManager.sol/TodoManager.json";
+
+import TodoCard from "@/components/TodoCard";
+import { Button } from "@/components/ui/button";
+import {
+	Drawer,
+	DrawerClose,
+	DrawerContent,
+	DrawerDescription,
+	DrawerFooter,
+	DrawerHeader,
+	DrawerTitle,
+	DrawerTrigger,
+} from "@/components/ui/drawer"
+import { Textarea } from "@/components/ui/textarea";
 
 const MetaMaskIcon = () => {
 	return (
-		<svg xmlns="http://www.w3.org/2000/svg" id="Layer_1" x="0" y="0" version="1.1" viewBox="0 0 318.6 318.6" width={32} height={32}>
-			<path fill="#e2761b" stroke="#e2761b" stroke-linecap="round" stroke-linejoin="round" d="m274.1 35.5-99.5 73.9L193 65.8z" />
-			<path d="m44.4 35.5 98.7 74.6-17.5-44.3zm193.9 171.3-26.5 40.6 56.7 15.6 16.3-55.3zm-204.4.9L50.1 263l56.7-15.6-26.5-40.6z" className="st1" />
-			<path d="m103.6 138.2-15.8 23.9 56.3 2.5-2-60.5zm111.3 0-39-34.8-1.3 61.2 56.2-2.5zM106.8 247.4l33.8-16.5-29.2-22.8zm71.1-16.5 33.9 16.5-4.7-39.3z" className="st1" />
-			<path fill="#d7c1b3" stroke="#d7c1b3" stroke-linecap="round" stroke-linejoin="round" d="m211.8 247.4-33.9-16.5 2.7 22.1-.3 9.3zm-105 0 31.5 14.9-.2-9.3 2.5-22.1z" />
-			<path fill="#233447" stroke="#233447" stroke-linecap="round" stroke-linejoin="round" d="m138.8 193.5-28.2-8.3 19.9-9.1zm40.9 0 8.3-17.4 20 9.1z" />
-			<path fill="#cd6116" stroke="#cd6116" stroke-linecap="round" stroke-linejoin="round" d="m106.8 247.4 4.8-40.6-31.3.9zM207 206.8l4.8 40.6 26.5-39.7zm23.8-44.7-56.2 2.5 5.2 28.9 8.3-17.4 20 9.1zm-120.2 23.1 20-9.1 8.2 17.4 5.3-28.9-56.3-2.5z" />
-			<path fill="#e4751f" stroke="#e4751f" stroke-linecap="round" stroke-linejoin="round" d="m87.8 162.1 23.6 46-.8-22.9zm120.3 23.1-1 22.9 23.7-46zm-64-20.6-5.3 28.9 6.6 34.1 1.5-44.9zm30.5 0-2.7 18 1.2 45 6.7-34.1z" />
-			<path d="m179.8 193.5-6.7 34.1 4.8 3.3 29.2-22.8 1-22.9zm-69.2-8.3.8 22.9 29.2 22.8 4.8-3.3-6.6-34.1z" className="st6" />
-			<path fill="#c0ad9e" stroke="#c0ad9e" stroke-linecap="round" stroke-linejoin="round" d="m180.3 262.3.3-9.3-2.5-2.2h-37.7l-2.3 2.2.2 9.3-31.5-14.9 11 9 22.3 15.5h38.3l22.4-15.5 11-9z" />
-			<path fill="#161616" stroke="#161616" stroke-linecap="round" stroke-linejoin="round" d="m177.9 230.9-4.8-3.3h-27.7l-4.8 3.3-2.5 22.1 2.3-2.2h37.7l2.5 2.2z" />
-			<path fill="#763d16" stroke="#763d16" stroke-linecap="round" stroke-linejoin="round" d="m278.3 114.2 8.5-40.8-12.7-37.9-96.2 71.4 37 31.3 52.3 15.3 11.6-13.5-5-3.6 8-7.3-6.2-4.8 8-6.1zM31.8 73.4l8.5 40.8-5.4 4 8 6.1-6.1 4.8 8 7.3-5 3.6 11.5 13.5 52.3-15.3 37-31.3-96.2-71.4z" />
-			<path d="m267.2 153.5-52.3-15.3 15.9 23.9-23.7 46 31.2-.4h46.5zm-163.6-15.3-52.3 15.3-17.4 54.2h46.4l31.1.4-23.6-46zm71 26.4 3.3-57.7 15.2-41.1h-67.5l15 41.1 3.5 57.7 1.2 18.2.1 44.8h27.7l.2-44.8z" className="st6" />
+		<svg xmlns="http://www.w3.org/2000/svg" width="1.28rem" height="1.2rem" viewBox="0 0 256 240">
+			<path fill="#e17726" d="M250.066 0L140.219 81.279l20.427-47.9z" />
+			<path fill="#e27625" d="m6.191.096l89.181 33.289l19.396 48.528zM205.86 172.858l48.551.924l-16.968 57.642l-59.243-16.311zm-155.721 0l27.557 42.255l-59.143 16.312l-16.865-57.643z" />
+			<path fill="#e27625" d="m112.131 69.552l1.984 64.083l-59.371-2.701l16.888-25.478l.214-.245zm31.123-.715l40.9 36.376l.212.244l16.888 25.478l-59.358 2.7zM79.435 173.044l32.418 25.259l-37.658 18.181zm97.136-.004l5.131 43.445l-37.553-18.184z" />
+			<path fill="#d5bfb2" d="m144.978 195.922l38.107 18.452l-35.447 16.846l.368-11.134zm-33.967.008l-2.909 23.974l.239 11.303l-35.53-16.833z" />
+			<path fill="#233447" d="m100.007 141.999l9.958 20.928l-33.903-9.932zm55.985.002l24.058 10.994l-34.014 9.929z" />
+			<path fill="#cc6228" d="m82.026 172.83l-5.48 45.04l-29.373-44.055zm91.95.001l34.854.984l-29.483 44.057zm28.136-44.444l-25.365 25.851l-19.557-8.937l-9.363 19.684l-6.138-33.849zm-148.237 0l60.435 2.749l-6.139 33.849l-9.365-19.681l-19.453 8.935z" />
+			<path fill="#e27525" d="m52.166 123.082l28.698 29.121l.994 28.749zm151.697-.052l-29.746 57.973l1.12-28.8zm-90.956 1.826l1.155 7.27l2.854 18.111l-1.835 55.625l-8.675-44.685l-.003-.462zm30.171-.101l6.521 35.96l-.003.462l-8.697 44.797l-.344-11.205l-1.357-44.862z" />
+			<path fill="#f5841f" d="m177.788 151.046l-.971 24.978l-30.274 23.587l-6.12-4.324l6.86-35.335zm-99.471 0l30.399 8.906l6.86 35.335l-6.12 4.324l-30.275-23.589z" />
+			<path fill="#c0ac9d" d="m67.018 208.858l38.732 18.352l-.164-7.837l3.241-2.845h38.334l3.358 2.835l-.248 7.831l38.487-18.29l-18.728 15.476l-22.645 15.553h-38.869l-22.63-15.617z" />
+			<path fill="#161616" d="m142.204 193.479l5.476 3.869l3.209 25.604l-4.644-3.921h-36.476l-4.556 4l3.104-25.681l5.478-3.871z" />
+			<path fill="#763e1a" d="M242.814 2.25L256 41.807l-8.235 39.997l5.864 4.523l-7.935 6.054l5.964 4.606l-7.897 7.191l4.848 3.511l-12.866 15.026l-52.77-15.365l-.457-.245l-38.027-32.078zm-229.628 0l98.326 72.777l-38.028 32.078l-.457.245l-52.77 15.365l-12.866-15.026l4.844-3.508l-7.892-7.194l5.952-4.601l-8.054-6.071l6.085-4.526L0 41.809z" />
+			<path fill="#f5841f" d="m180.392 103.99l55.913 16.279l18.165 55.986h-47.924l-33.02.416l24.014-46.808zm-104.784 0l-17.151 25.873l24.017 46.808l-33.005-.416H1.631l18.063-55.985zm87.776-70.878l-15.639 42.239l-3.319 57.06l-1.27 17.885l-.101 45.688h-30.111l-.098-45.602l-1.274-17.986l-3.32-57.045l-15.637-42.239z" />
 		</svg>
 	);
 };
+
+const Address = "0xb28238020A46389b88049D6F479c69A4957160F7"
 
 export default function Home() {
 
 	const [walletAddress, setWalletAddress] = useState(null)
 	const [correctNetwork, setCorrectNetwork] = useState(false)
 
+	const [contract, setContract] = useState(null);
+
 	const [todos, setTodos] = useState([{
 		title: "Fix Pitstop Team Registration",
 		content: "Change the category generation and fix backend 500 error"
 	}])
 
-	const requestWallet = async () => {
+	async function requestWalletAndConnect() {
 		try {
 			const { ethereum } = window;
 			if (!ethereum) {
@@ -42,39 +61,98 @@ export default function Home() {
 				return
 			}
 
-			const chainId = await ethereum.request({method: 'eth_chainId'})
-			const testNetworkId = '0x4'
+			const chainId = await ethereum.request({ method: 'eth_chainId' })
+			const testNetworkId = '0x539'
 			if (chainId !== testNetworkId) {
-				alert("You are not connected to local network")
+				console.log(chainId)
+				alert("You are not connected to Local Ganache Network")
 				setCorrectNetwork(false)
 				return
 			} else {
 				setCorrectNetwork(true)
 			}
 
-			const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
-			setWalletAddress(accounts[0])
+			const provider = new ethers.BrowserProvider(window.ethereum);
+			const signer = await provider.getSigner();
+
+			const contract = new ethers.Contract(Address, TodoManagerContract.abi, signer);
+
+			const todos = await contract.getAllTodos();
+			console.log(todos);
+
+			setContract(contract)
+			setWalletAddress(signer.address)
 
 		} catch (error) {
 			console.log(error)
 		}
 	}
 
-	const createTodo = () => {
-		alert("Naya todo")
+	async function createTodo() {
+		try {
+			if (contract) {
+				const txn = await contract.addTodo("Ye hua na kaam chaluuu");
+				let receipt = await txn.wait();
+				let gasUsed = receipt.gasUsed;
+				// let gasPrice = await contract.provider.getGasPrice();
+				// let transactionFeeWei = gasUsed.mul(gasPrice);
+
+				console.log(receipt, gasUsed);
+
+			}
+		} catch (err) {
+			console.log(err)
+		}
 	}
 
+	useEffect(() => {
+		if (!contract || !walletAddress) {
+			requestWalletAndConnect()
+		}
+	}, [])
+
 	return (
-		<main className="relative flex min-h-screen flex-col items-start justify-center p-24">
-			<h1 className="text-[3.5rem] font-bold">Decen Todo ~</h1>
+		<main className="relative flex min-h-screen flex-col items-start justify-center p-24" suppressHydrationWarning>
+			<h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+				Decen Todo ~
+			</h1>
 			<div className="flex items-center justify-center mb-4 w-full">
-				<p className="text-lg font-light">Manage and create your todo's with privacy!</p>
-				<button className="add-todo flex items-center ml-auto" onClick={createTodo}>
-					<Add size={24} color="#ffffff" /> <span className="ml-2">Create New Todo</span>
-				</button>
+				<p className="text-sm font-medium leading-none text-slate-400 mt-4 mr-auto">
+				{contract && walletAddress ? (
+					"✅ Connection Established! Manage and create your todo's on blockchain."
+				) : (
+					"🔃 Load your wallet and wait for us to connect with the contract."
+				)}
+				</p>
+
+				<Drawer>
+					<DrawerTrigger className="flex items-center justify-center">
+						<Button variant="ghost">
+							<Add size={28} className="mr-2 h-4 w-4" /> Create new todo
+						</Button>
+					</DrawerTrigger>
+					<DrawerContent>
+						<DrawerHeader>
+							<DrawerTitle>Create a new todo</DrawerTitle>
+							<DrawerDescription>This action will create a new block on the blockchain containing the todo.</DrawerDescription>
+						</DrawerHeader>
+
+						<Textarea
+							className="w-auto mx-4 border-slate-800 bg-[#252525]"
+							placeholder="What's on your mind ..."
+						/>
+
+						<DrawerFooter className={"w-full flex flex-row items-center justify-center"}>
+							<Button onClick={createTodo}>Submit</Button>
+							<DrawerClose>
+								<Button className="w-full">Cancel</Button>
+							</DrawerClose>
+						</DrawerFooter>
+					</DrawerContent>
+				</Drawer>
 				<hr className="rotate-90 bg-white w-[1.8rem] opacity-30" />
-				
-				<button className="flex items-center" onClick={requestWallet}>
+
+				<Button onClick={requestWalletAndConnect} variant="ghost">
 					<MetaMaskIcon />
 					{walletAddress ? (
 						<span className="ml-2">Wallet Connected.</span>
@@ -83,10 +161,11 @@ export default function Home() {
 					) : (
 						<span className="ml-2">Connect my wallet</span>
 					)}
-				</button>
+				</Button>
 			</div>
 			<hr className="mb-10 bg-gray-100 opacity-20 w-full mb-10" />
 
+			<TodoCard />
 			<TodoCard />
 
 			{/* <CreateTodo /> */}

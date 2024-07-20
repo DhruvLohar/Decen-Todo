@@ -2,38 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: #fff;
-  --text-color: #1e1e1e;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: #010101;
-    --text-color: #fff;
-  }
-}
-
 body {
-  color: var(--text-color);
-  background: var(--foreground-rgb);
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
-
-.st1,
-.st6 {
-  fill: #e4761b;
-  stroke: #e4761b;
-  stroke-linecap: round;
-  stroke-linejoin: round
-}
-
-.st6 {
-  fill: #f6851b;
-  stroke: #f6851b
+  background-color: #0B0B0B;
+  color: #FFFFFF;
 }

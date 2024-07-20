@@ -10,11 +10,11 @@ export default ({ todo }) => {
 
     return (
         <div 
-            style={{boxShadow: "5px 5px 0px white"}}
+            style={{boxShadow: "4px 4px 0px white"}}
             className="
                 w-full
                 flex items-center justify-start
-                card border border-2 py-4 px-6 rounded-3xl
+                card border border-2 py-4 px-6 rounded-3xl mb-6
             "
         >
             <h1 className="card-title mr-2">Fix Pitstop Team Registration</h1>
